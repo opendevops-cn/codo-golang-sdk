@@ -26,6 +26,7 @@ type RedisConfig struct {
 	DialTimeout  uint32 `json:"dial_timeout" yaml:"dialTimeout" env:"DEFAULT_REDIS_DIAL_TIMEOUT"`
 	ReadTimeout  uint32 `json:"read_timeout" yaml:"readTimeout" env:"DEFAULT_REDIS_READ_TIMEOUT"`
 	WriteTimeout uint32 `json:"write_timeout" yaml:"writeTimeout" env:"DEFAULT_REDIS_WRITE_TIMEOUT"`
+	DB           uint32 `json:"db" yaml:"db" env:"DEFAULT_REDIS_DB"`
 
 	TracerProvider trace.TracerProvider `json:"-"`
 	MeterProvider  metric.MeterProvider `json:"-"`
@@ -45,11 +46,13 @@ func defaultRedisConfig() RedisConfig {
 	dialTimeout := emptyOr(os.Getenv("DEFAULT_REDIS_DIAL_TIMEOUT"), "10")
 	readTimeout := emptyOr(os.Getenv("DEFAULT_REDIS_READ_TIMEOUT"), "10")
 	writeTimeout := emptyOr(os.Getenv("DEFAULT_REDIS_WRITE_TIMEOUT"), "10")
+	db := emptyOr(os.Getenv("DEFAULT_REDIS_DB"), "0")
 
 	i64Port, _ := strconv.Atoi(port)
 	i64DialTimeout, _ := strconv.Atoi(dialTimeout)
 	i64ReadTimeout, _ := strconv.Atoi(readTimeout)
 	i64WriteTimeout, _ := strconv.Atoi(writeTimeout)
+	i64DB, _ := strconv.Atoi(db)
 
 	return RedisConfig{
 		Host:           host,
@@ -58,6 +61,7 @@ func defaultRedisConfig() RedisConfig {
 		DialTimeout:    uint32(i64DialTimeout),
 		ReadTimeout:    uint32(i64ReadTimeout),
 		WriteTimeout:   uint32(i64WriteTimeout),
+		DB:             uint32(i64DB),
 		TracerProvider: otel.GetTracerProvider(),
 		MeterProvider:  otel.GetMeterProvider(),
 	}
@@ -76,6 +80,7 @@ func NewRedis(opts ...RedisConfigOption) (*redis.Client, error) {
 		DialTimeout:  time.Duration(cfg.ReadTimeout) * time.Second,
 		ReadTimeout:  time.Duration(cfg.ReadTimeout) * time.Second,
 		WriteTimeout: time.Duration(cfg.WriteTimeout) * time.Second,
+		DB:           int(cfg.DB),
 	})
 
 	// Enable tracing instrumentation.
