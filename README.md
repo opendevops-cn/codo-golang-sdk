@@ -13,10 +13,30 @@
   - [ ] 通用的 配置 组件
   - [ ] 通用的 日志 组件
   - [ ] 通用的 otel propagator
+- [x] **OpenAPI 客户端**（AK/SK · `CODO1-HMAC-SHA256`）→ [`openapi/`](./openapi/)
 - [ ] 工具链
   - [ ] 自动生成 HTTP 代码(proto 转 http)
   - [ ] 自动生成 MYSQL 代码(数据库转结构体)
   - [ ] LINT 检查
+
+## OpenAPI（AK/SK 调网关）
+
+程序 / CI 用 **API 凭证** 调 Codo 业务 API 时，使用子包 `openapi`：
+
+```go
+import "github.com/opendevops-cn/codo-golang-sdk/openapi"
+
+client := openapi.NewClient("<AK>", "<SK>", "https://gw.example.com")
+resp, err := client.Get(ctx, "/api/p/v4/biz/list/", nil)
+```
+
+- 协议：`CODO1-HMAC-SHA256`（与 Python `websdk2.openapi_client`、网关 `openapi_aksk` 对齐）
+- **不是** `middleware` / `tools/xsgin` 的 MD5 `x-sign`
+- 说明、向量与排错：[openapi/README.md](./openapi/README.md)
+
+```bash
+go test ./openapi/ -count=1
+```
 
 ## 目录结构
 ```
@@ -36,27 +56,20 @@
 ├── consts 常量定义
 │   ├── bytes.go
 │   └── consts.go
-├── go.mod 
+├── go.mod
 ├── go.sum
 ├── internal # 私有包
 │   └── meta # lib元数据
 ├── logger # 日志组件
-│   ├── global.go
-│   ├── helper.go
-│   ├── level.go
-│   ├── logger.go
-│   └── std.go
-├── middleware # 通用中间件
-│   └── xsign.middleware.go
-├── mq
-├── mysql # mysql 客户端 wrapper
-│   └── mysql.go
-├── redis # redis 客户端 wrapper
-│   └── redis.go
-├── tools # 小工具
-│   ├── cascmd # cas 
-│   └── xsgin # sign 签名
-└── xnet # 网络工具
-    ├── xip # ip 工具
-    └── xtls # tls 工具
+├── middleware # 通用中间件（含旧版 MD5 x-sign，勿与 OpenAPI 混淆）
+├── mysql
+├── openapi # Codo OpenAPI AK/SK 客户端（CODO1-HMAC-SHA256）
+│   ├── sign.go
+│   ├── client.go
+│   └── README.md
+├── redis
+├── tools
+│   ├── cascmd
+│   └── xsgin # 旧 MD5 签名
+└── xnet
 ```
